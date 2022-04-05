@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import bookService from './services/personBook'
+import bookService from "./services/personBook";
 
 const Filter = ({ filter, setFilter }) => {
   return (
@@ -32,19 +32,18 @@ const PersonForm = ({
   );
 };
 
-const Persons = ({persons, filter, deleteEntry}) => {
-  return (
-    persons
-      .filter((person) =>
-        person.name.toLowerCase().includes(filter.toLowerCase())
-      )
-      .map((person) => (
-        <li key={person.name}>
-          {person.name} - {person.number} <button onClick={() => deleteEntry(person.id)}>delete</button>
-        </li>
-      ))
-  )
-}
+const Persons = ({ persons, filter, deleteEntry }) => {
+  return persons
+    .filter((person) =>
+      person.name.toLowerCase().includes(filter.toLowerCase())
+    )
+    .map((person) => (
+      <li key={person.name}>
+        {person.name} - {person.number}{" "}
+        <button onClick={() => deleteEntry(person.id)}>delete</button>
+      </li>
+    ));
+};
 
 const App = () => {
   const [persons, setPersons] = useState([]);
@@ -54,23 +53,35 @@ const App = () => {
 
   useEffect(() => {
     bookService
-      .getAll('http://localhost:3001/persons')
-      .then(response => setPersons(response))
-  }, [])
+      .getAll("http://localhost:3001/persons")
+      .then((response) => setPersons(response));
+  }, []);
 
   function addEntryToBook(e) {
     e.preventDefault();
-
-    if (persons.some((p) => p.name === newName)) {
+    if (
+      persons.some((p) => p.name === newName && p.number === newPhoneNumber)
+    ) {
       alert(`${newName} is already added to phonebook`);
+    } else if (
+      persons.some((p) => p.name === newName && p.number !== newPhoneNumber)
+    ) {
+      const personEntry = persons.find((p) => p.name === newName);
+      const updatedEntry = { ...personEntry, number: newPhoneNumber };
+
+      bookService
+        .update(personEntry.id, updatedEntry)
+        .then((response) =>
+          setPersons(
+            persons.map((p) => (p.id === personEntry.id ? response : p))
+          )
+        );
     } else {
       const personEntry = { name: newName, number: newPhoneNumber };
-      
-      bookService
-        .create(personEntry)
-        .then(response => {
-          setPersons(persons.concat(response))
-        })
+
+      bookService.create(personEntry).then((response) => {
+        setPersons(persons.concat(response));
+      });
     }
 
     setNewName("");
@@ -78,12 +89,15 @@ const App = () => {
   }
 
   function deleteEntry(id) {
-    if (window.confirm(`Delete ${persons.find(p => p.id === id).name} ?`)){
-      bookService.erase(id).then(response => {
-        setPersons(persons.filter(p => p.id !== id))
-      }).catch(error => {
-        alert(`Entry ${id} was not found in the database : ${error}`)
-      })
+    if (window.confirm(`Delete ${persons.find((p) => p.id === id).name} ?`)) {
+      bookService
+        .erase(id)
+        .then((response) => {
+          setPersons(persons.filter((p) => p.id !== id));
+        })
+        .catch((error) => {
+          alert(`Entry ${id} was not found in the database : ${error}`);
+        });
     }
   }
 
@@ -100,7 +114,7 @@ const App = () => {
         setNewPhoneNumber={(e) => setNewPhoneNumber(e.target.value)}
       />
       <h3>Numbers</h3>
-      <Persons persons={persons} filter={filter} deleteEntry={deleteEntry}/>
+      <Persons persons={persons} filter={filter} deleteEntry={deleteEntry} />
     </div>
   );
 };
