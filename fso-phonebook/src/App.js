@@ -32,7 +32,7 @@ const PersonForm = ({
   );
 };
 
-const Persons = ({persons, filter}) => {
+const Persons = ({persons, filter, deleteEntry}) => {
   return (
     persons
       .filter((person) =>
@@ -40,7 +40,7 @@ const Persons = ({persons, filter}) => {
       )
       .map((person) => (
         <li key={person.name}>
-          {person.name} - {person.number}
+          {person.name} - {person.number} <button onClick={() => deleteEntry(person.id)}>delete</button>
         </li>
       ))
   )
@@ -77,6 +77,16 @@ const App = () => {
     setNewPhoneNumber("");
   }
 
+  function deleteEntry(id) {
+    if (window.confirm(`Delete ${persons.find(p => p.id === id).name} ?`)){
+      bookService.erase(id).then(response => {
+        setPersons(persons.filter(p => p.id !== id))
+      }).catch(error => {
+        alert(`Entry ${id} was not found in the database : ${error}`)
+      })
+    }
+  }
+
   return (
     <div>
       <h2>Phonebook</h2>
@@ -90,7 +100,7 @@ const App = () => {
         setNewPhoneNumber={(e) => setNewPhoneNumber(e.target.value)}
       />
       <h3>Numbers</h3>
-      <Persons persons={persons} filter={filter} />
+      <Persons persons={persons} filter={filter} deleteEntry={deleteEntry}/>
     </div>
   );
 };
