@@ -1,55 +1,19 @@
 import { useState, useEffect } from "react";
+
 import bookService from "./services/personBook";
 
-const Filter = ({ filter, setFilter }) => {
-  return (
-    <div>
-      filter: <input value={filter} onChange={setFilter} />
-    </div>
-  );
-};
+import Filter from "./components/Filter";
+import PersonForm from "./components/PersonForm";
+import Persons from "./components/Persons";
+import Notification from "./components/Notification";
 
-const PersonForm = ({
-  addEntryToBook,
-  newName,
-  setNewName,
-  newPhoneNumber,
-  setNewPhoneNumber,
-}) => {
-  return (
-    <form onSubmit={addEntryToBook}>
-      <div>
-        name: <input required value={newName} onChange={setNewName} />
-      </div>
-      <div>
-        number:{" "}
-        <input required value={newPhoneNumber} onChange={setNewPhoneNumber} />
-      </div>
-      <div>
-        <button type="submit">add</button>
-      </div>
-    </form>
-  );
-};
-
-const Persons = ({ persons, filter, deleteEntry }) => {
-  return persons
-    .filter((person) =>
-      person.name.toLowerCase().includes(filter.toLowerCase())
-    )
-    .map((person) => (
-      <li key={person.name}>
-        {person.name} - {person.number}{" "}
-        <button onClick={() => deleteEntry(person.id)}>delete</button>
-      </li>
-    ));
-};
 
 const App = () => {
   const [persons, setPersons] = useState([]);
   const [newName, setNewName] = useState("");
   const [newPhoneNumber, setNewPhoneNumber] = useState("");
   const [filter, setFilter] = useState("");
+  const [message, setMessage] = useState(null)
 
   useEffect(() => {
     bookService
@@ -61,7 +25,7 @@ const App = () => {
     e.preventDefault();
 
     const existingEntry = persons.find((p) => p.name === newName);
-    
+
     if (existingEntry && existingEntry.number === newPhoneNumber) {
       alert(`${newName} is already added to phonebook`);
     } else if (existingEntry) {
@@ -69,16 +33,36 @@ const App = () => {
 
       bookService
         .update(existingEntry.id, updatedEntry)
-        .then((response) =>
+        .then((response) => {
           setPersons(
             persons.map((p) => (p.id === existingEntry.id ? response : p))
           )
-        );
+          setMessage(
+            `${existingEntry.name}'s number was updated!`
+          )
+          setTimeout(() => {
+            setMessage(null)
+          }, 1000)
+        })
+        .catch((error) => {
+          setMessage(
+            `ERROR: ${existingEntry.name}'s information has already been removed from the database!`
+          )
+          setTimeout(() => {
+            setMessage(null)
+          }, 5000);
+        });
     } else {
       const personEntry = { name: newName, number: newPhoneNumber };
 
       bookService.create(personEntry).then((response) => {
         setPersons(persons.concat(response));
+        setMessage(
+          `${personEntry.name} was added to the phonebook!`
+        )
+        setTimeout(() => {
+          setMessage(null)
+        }, 1000)
       });
     }
 
@@ -104,6 +88,7 @@ const App = () => {
       <h2>Phonebook</h2>
       <Filter filter={filter} setFilter={(e) => setFilter(e.target.value)} />
       <h3>Add a new entry</h3>
+      <Notification message={message}/>
       <PersonForm
         addEntryToBook={addEntryToBook}
         newName={newName}

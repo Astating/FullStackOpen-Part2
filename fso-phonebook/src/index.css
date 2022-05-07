@@ -1,0 +1,17 @@
+.error, .success {
+    background: antiquewhite;
+    border: solid 2px;
+    width: fit-content;
+    padding: 3px;
+    border-radius: 3px;
+}
+
+.error {
+    color: red;
+    border-color: red;
+}
+
+.success {
+    color: green;
+    border-color: green;
+}
