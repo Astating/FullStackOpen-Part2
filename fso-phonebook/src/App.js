@@ -17,7 +17,7 @@ const App = () => {
 
   useEffect(() => {
     bookService
-      .getAll("http://localhost:3001/api/persons")
+      .getAll()
       .then((response) => setPersons(response));
   }, []);
 
